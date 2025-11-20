@@ -32,5 +32,4 @@ PXL Monopoly Lite is een vereenvoudigde variant van Monopoly met een kleiner spe
 
 ---
 
-## Project Structuur
 
