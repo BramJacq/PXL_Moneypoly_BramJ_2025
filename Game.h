@@ -6,7 +6,9 @@
 #include "Player.h"
 
 namespace pxl {
-
+// -------------------------------------------------------------
+// VRAAG 3 & 6 & 8 → Game gebruikt composition: bevat Players & Tiles
+// -------------------------------------------------------------
 class Game {
 public:
     Game();
@@ -14,7 +16,10 @@ public:
     void start();
 
 private:
+    // VRAAG 8: composition → Game BEVAT een bord
     std::vector<std::unique_ptr<Tile>> board_;
+
+    // VRAAG 8: composition → Game BEVAT spelers
     std::vector<std::unique_ptr<Player>> players_;
 };
 

@@ -4,7 +4,11 @@
 #include <iostream>
 
 namespace pxl {
-
+// -------------------------------------------------------------
+// VRAAG 4: abstraction → Property verbergt interne logica
+// VRAAG 6: inheritance → Property erft van Tile
+// VRAAG 5: encapsulation → private data price_ en owner_
+// -------------------------------------------------------------
 class Property : public Tile {
 public:
     Property(const std::string& name, int price)

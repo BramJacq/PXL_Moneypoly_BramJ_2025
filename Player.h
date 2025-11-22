@@ -2,7 +2,11 @@
 #include <string>
 
 namespace pxl {
-
+// -------------------------------------------------------------
+// Player class
+// VRAAG 3: correct class → Player bevat alle speler-data
+// VRAAG 5: encapsulation → alles private
+// -------------------------------------------------------------
 class Player {
 public:
     Player(const std::string& name, int money = 500)

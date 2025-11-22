@@ -2,7 +2,10 @@
 #include <cstdlib>
 
 namespace pxl {
-
+// -------------------------------------------------------------
+// Property land behavior
+// VRAAG 5: encapsulation → owner_ en price_ zijn intern
+// -------------------------------------------------------------
 void Property::onLand(Player& p) {
     if(owner_ == nullptr) {
         if(p.canBuy(price_) && (rand() % 2 == 0)) { // 50% kans kopen

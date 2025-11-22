@@ -31,7 +31,7 @@ void Game::start() {
 
             std::cout << p->getName() << " rolt " << roll
                       << " en landt op " << board_[p->getPos()]->getName() << "\n";
-
+            // VRAAG 5 + 7: polymorphism → onLand() is virtueel
             board_[p->getPos()]->onLand(*p);
 
             p->changeMoney(10); // kleine bonus
