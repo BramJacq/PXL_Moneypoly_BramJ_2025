@@ -1,23 +1,23 @@
 #include "Property.h"
+#include <iostream>
 #include <cstdlib>
 
 namespace pxl {
-// -------------------------------------------------------------
-// Property land behavior
-// VRAAG 5: encapsulation → owner_ en price_ zijn intern
-// -------------------------------------------------------------
-void Property::onLand(Player& p) {
-    if(owner_ == nullptr) {
-        if(p.canBuy(price_) && (rand() % 2 == 0)) { // 50% kans kopen
+
+void Property::onLand(Player &p) {
+    // if unowned - chance to buy
+    if (!owner_) {
+        if (p.canBuy(price_) && (rand() % 2 == 0)) {
             p.changeMoney(-price_);
             owner_ = &p;
-            std::cout << p.getName() << " kocht " << name_ << " voor " << price_ << "!\n";
+            std::cout << p.getName() << " bought " << name_ << " for " << price_ << std::endl;
         }
-    } else if(owner_ != &p) {
-        int rent = price_/5;
+    } else if (owner_ != &p) {
+        // pay rent
+        int rent = price_ / 5;
         p.changeMoney(-rent);
         owner_->changeMoney(rent);
-        std::cout << p.getName() << " betaalt huur " << rent << " aan " << owner_->getName() << "\n";
+        std::cout << p.getName() << " paid rent " << rent << " to " << owner_->getName() << std::endl;
     }
 }
 

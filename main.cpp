@@ -1,24 +1,35 @@
-#include "Game.h"
-#include <cstdlib>
+#include <QApplication>
 #include <ctime>
+#include <cstdlib>
+#include "BoardWidget.h"
+#include "Game.h"
 
-int main() {
-    srand(time(nullptr)); // echte random
+int main(int argc, char **argv) {
+    QApplication app(argc, argv);
 
-    pxl::Game g;
-    g.addPlayer("Martijn");
-    g.addPlayer("Bram");
-    g.addPlayer("Joel");
-    g.addPlayer("Ward");
-    g.addPlayer("Kaelig");
-    g.addPlayer("Jonas");
-    g.addPlayer("Fe");
-    g.addPlayer("Maciej");
-    g.addPlayer("Viktor");
-    g.addPlayer("Timo");
-    g.addPlayer("Fee");
-    g.addPlayer("Lennert");
-    g.addPlayer("Johnny");
+    srand(static_cast<unsigned int>(time(nullptr)));
 
-    g.start();
+    pxl::Game game;
+
+    // Bram = human
+    game.addPlayer("Bram", true);
+
+    // bots
+    game.addPlayer("Martijn");
+    game.addPlayer("Joel");
+    game.addPlayer("Ward");
+    game.addPlayer("Kaelig");
+    game.addPlayer("Jonas");
+    game.addPlayer("Fe");
+    game.addPlayer("Maciej");
+    game.addPlayer("Viktor");
+    game.addPlayer("Timo");
+    game.addPlayer("Fee");
+    game.addPlayer("Lennert");
+    game.addPlayer("Johnny");
+
+    pxl::BoardWidget w(&game);
+    w.show();
+
+    return app.exec();
 }

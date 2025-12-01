@@ -2,25 +2,24 @@
 #include <string>
 
 namespace pxl {
-// -------------------------------------------------------------
-// VRAAG 3: useful & correct class
-// -> Tile is een duidelijke class die één taak heeft: bordvak voorstellen
-// -------------------------------------------------------------
-class Player; // forward declaration
 
-// -------------------------------------------------------------
-// VRAAG 7: correct base class
-// VRAAG 8: abstract base class
-// -------------------------------------------------------------
+class Player; // forward
+
+// Abstract base class for board tiles.
 class Tile {
 public:
-    Tile(const std::string& name) : name_(name) {}
-    virtual ~Tile() {}
+    Tile() : name_("Tile") {}
+    Tile(const std::string &name) : name_(name) {}
+    Tile(const Tile &other) = default;
+    virtual ~Tile() = default;
 
-    const std::string& getName() const { return name_; }
-    virtual void onLand(Player& p) = 0; // abstract base class
+    const std::string &getName() const { return name_; }
+
+    // pure virtual, must be overridden
+    virtual void onLand(Player &p) = 0;
+
 protected:
-    // VRAAG 5: encapsulation (private/protected members)
     std::string name_;
 };
+
 } // namespace pxl
