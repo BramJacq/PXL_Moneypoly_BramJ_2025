@@ -1,5 +1,4 @@
 #include "Game.h"
-#include <QString>
 #include <cstdlib>
 
 namespace pxl {
@@ -7,7 +6,6 @@ namespace pxl {
 Game::Game(QObject *parent)
     : QObject(parent), currentIndex_(0)
 {
-    // 16 tiles -> perfect for 5x5 border
     board_.push_back(std::make_unique<ConcreteTile>("Start"));
     board_.push_back(std::make_unique<Property>("C++ Debugger", 120));
     board_.push_back(std::make_unique<Property>("Resistor", 100));
@@ -33,44 +31,61 @@ void Game::addPlayer(const std::string &name, bool human) {
 }
 
 bool Game::isCurrentPlayerHuman() const {
-    if (players_.empty()) return false;
     return players_[currentIndex_].isHuman();
 }
 
 void Game::movePlayer(Player &p, int rolled)
 {
-    int boardSize = getBoardSize();
-    if (boardSize == 0) return;
-
-    unsigned char steps = static_cast<unsigned char>(rolled);
-    unsigned char sz = static_cast<unsigned char>(boardSize);
-
-    p.move(steps, sz);
+    p.move(static_cast<unsigned char>(rolled),
+           static_cast<unsigned char>(getBoardSize()));
     board_[p.getPos()]->onLand(p);
+}
+
+bool Game::checkGameOver()
+{
+    int aliveCount = 0;
+    Player *lastAlive = nullptr;
+
+    for (auto &p : players_) {
+        if (p.isAlive()) {
+            aliveCount++;
+            lastAlive = &p;
+        }
+    }
+
+    if (aliveCount <= 1 && lastAlive) {
+        if (!lastAlive->isHuman()) {
+            emit message("YOU LOST! Winner: " +
+                         QString::fromStdString(lastAlive->getName()));
+        } else {
+            emit message("YOU WON!");
+        }
+        return true;
+    }
+    return false;
 }
 
 void Game::humanRollOnce()
 {
-    if (players_.empty()) return;
-
     Player &p = players_[currentIndex_];
-    if (!p.isHuman()) return;
+    if (!p.isAlive() || !p.isHuman()) return;
 
     int roll = (std::rand() % 6) + 1;
-
-    // ✅ ONLY show human roll
     emit message(QString::fromStdString(p.getName()) +
                  " rolled " + QString::number(roll));
 
     movePlayer(p, roll);
     emit boardChanged();
 
-    advanceOneTurn();
+    if (!checkGameOver())
+        advanceOneTurn();
 }
 
 void Game::advanceOneTurn()
 {
-    currentIndex_ = (currentIndex_ + 1) % players_.size();
+    do {
+        currentIndex_ = (currentIndex_ + 1) % players_.size();
+    } while (!players_[currentIndex_].isAlive());
 
     if (!isCurrentPlayerHuman()) {
         rollDiceForBots();
@@ -79,15 +94,23 @@ void Game::advanceOneTurn()
 
 void Game::rollDiceForBots()
 {
-    // bots move automatically, NO UI messages
     while (!isCurrentPlayerHuman()) {
         Player &b = players_[currentIndex_];
+        if (!b.isAlive()) {
+            currentIndex_ = (currentIndex_ + 1) % players_.size();
+            continue;
+        }
 
         int roll = (std::rand() % 6) + 1;
         movePlayer(b, roll);
         emit boardChanged();
 
-        currentIndex_ = (currentIndex_ + 1) % players_.size();
+        if (checkGameOver())
+            return;
+
+        do {
+            currentIndex_ = (currentIndex_ + 1) % players_.size();
+        } while (!players_[currentIndex_].isAlive());
     }
 }
 

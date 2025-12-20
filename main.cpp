@@ -6,15 +6,11 @@
 
 int main(int argc, char **argv) {
     QApplication app(argc, argv);
-
     srand(static_cast<unsigned int>(time(nullptr)));
 
     pxl::Game game;
 
-    // Bram = human
     game.addPlayer("Bram", true);
-
-    // bots
     game.addPlayer("Martijn");
     game.addPlayer("Joel");
     game.addPlayer("Ward");

@@ -15,7 +15,6 @@ public:
 
     void addPlayer(const std::string &name, bool human = false);
 
-    // Called by UI
     void humanRollOnce();
     void advanceOneTurn();
 
@@ -33,10 +32,10 @@ signals:
 private:
     void movePlayer(Player &p, int rolled);
     void rollDiceForBots();
+    bool checkGameOver();
 
     std::vector<Player> players_;
     std::vector<std::unique_ptr<Tile>> board_;
-
     int currentIndex_;
 };
 
