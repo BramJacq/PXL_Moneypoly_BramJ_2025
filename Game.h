@@ -15,10 +15,14 @@ public:
 
     void addPlayer(const std::string &name, bool human = false);
 
+    // Called by UI
     void humanRollOnce();
     void advanceOneTurn();
+    void endGameNow();
 
     bool isCurrentPlayerHuman() const;
+    bool isGameOver() const { return gameOver_; }
+
     size_t playerCount() const { return players_.size(); }
     const Player &playerAt(size_t i) const { return players_.at(i); }
 
@@ -32,11 +36,17 @@ signals:
 private:
     void movePlayer(Player &p, int rolled);
     void rollDiceForBots();
-    bool checkGameOver();
+
+    int nextAliveIndex(int start) const;
+    int aliveCount() const;
+    int findWinnerIndex() const;
+    void checkGameOver();
 
     std::vector<Player> players_;
     std::vector<std::unique_ptr<Tile>> board_;
+
     int currentIndex_;
+    bool gameOver_;
 };
 
 } // namespace pxl

@@ -1,10 +1,11 @@
 #include "Game.h"
+#include <QString>
 #include <cstdlib>
 
 namespace pxl {
 
 Game::Game(QObject *parent)
-    : QObject(parent), currentIndex_(0)
+    : QObject(parent), currentIndex_(0), gameOver_(false)
 {
     board_.push_back(std::make_unique<ConcreteTile>("Start"));
     board_.push_back(std::make_unique<Property>("C++ Debugger", 120));
@@ -31,61 +32,100 @@ void Game::addPlayer(const std::string &name, bool human) {
 }
 
 bool Game::isCurrentPlayerHuman() const {
+    if (players_.empty()) return false;
     return players_[currentIndex_].isHuman();
+}
+
+int Game::aliveCount() const {
+    int count = 0;
+    for (const auto &p : players_) {
+        if (!p.isBankrupt()) count++;
+    }
+    return count;
+}
+
+int Game::findWinnerIndex() const {
+    for (size_t i = 0; i < players_.size(); ++i) {
+        if (!players_[i].isBankrupt())
+            return static_cast<int>(i);
+    }
+    return -1;
+}
+
+int Game::nextAliveIndex(int start) const {
+    int idx = start;
+    int size = static_cast<int>(players_.size());
+
+    do {
+        idx = (idx + 1) % size;
+    } while (players_[idx].isBankrupt());
+
+    return idx;
+}
+
+void Game::checkGameOver()
+{
+    if (gameOver_) return;
+
+    if (aliveCount() <= 1) {
+        int winIdx = findWinnerIndex();
+        if (winIdx >= 0) {
+            emit message(QString::fromStdString(players_[winIdx].getName()) + " WON!");
+        }
+        gameOver_ = true;
+    }
 }
 
 void Game::movePlayer(Player &p, int rolled)
 {
-    p.move(static_cast<unsigned char>(rolled),
-           static_cast<unsigned char>(getBoardSize()));
+    int boardSize = getBoardSize();
+    if (boardSize == 0) return;
+
+    unsigned char steps = static_cast<unsigned char>(rolled);
+    unsigned char sz = static_cast<unsigned char>(boardSize);
+
+    p.move(steps, sz);
     board_[p.getPos()]->onLand(p);
-}
 
-bool Game::checkGameOver()
-{
-    int aliveCount = 0;
-    Player *lastAlive = nullptr;
-
-    for (auto &p : players_) {
-        if (p.isAlive()) {
-            aliveCount++;
-            lastAlive = &p;
-        }
+    if (p.isBankrupt()) {
+        emit message(QString::fromStdString(p.getName()) + " is bankrupt!");
     }
-
-    if (aliveCount <= 1 && lastAlive) {
-        if (!lastAlive->isHuman()) {
-            emit message("YOU LOST! Winner: " +
-                         QString::fromStdString(lastAlive->getName()));
-        } else {
-            emit message("YOU WON!");
-        }
-        return true;
-    }
-    return false;
 }
 
 void Game::humanRollOnce()
 {
+    if (players_.empty() || gameOver_) return;
+
     Player &p = players_[currentIndex_];
-    if (!p.isAlive() || !p.isHuman()) return;
+    if (!p.isHuman() || p.isBankrupt()) return;
 
     int roll = (std::rand() % 6) + 1;
+
     emit message(QString::fromStdString(p.getName()) +
                  " rolled " + QString::number(roll));
 
     movePlayer(p, roll);
     emit boardChanged();
 
-    if (!checkGameOver())
-        advanceOneTurn();
+    if (p.isBankrupt()) {
+        emit message("YOU LOST!");
+        int winIdx = findWinnerIndex();
+        if (winIdx >= 0) {
+            emit message(QString::fromStdString(players_[winIdx].getName()) + " WON!");
+        }
+        gameOver_ = true;
+        return;
+    }
+
+    checkGameOver();
+    advanceOneTurn();
 }
 
 void Game::advanceOneTurn()
 {
-    do {
-        currentIndex_ = (currentIndex_ + 1) % players_.size();
-    } while (!players_[currentIndex_].isAlive());
+    if (gameOver_) return;
+
+    currentIndex_ = nextAliveIndex(currentIndex_);
 
     if (!isCurrentPlayerHuman()) {
         rollDiceForBots();
@@ -94,24 +134,47 @@ void Game::advanceOneTurn()
 
 void Game::rollDiceForBots()
 {
-    while (!isCurrentPlayerHuman()) {
+    while (!gameOver_ && !isCurrentPlayerHuman()) {
         Player &b = players_[currentIndex_];
-        if (!b.isAlive()) {
-            currentIndex_ = (currentIndex_ + 1) % players_.size();
+        if (b.isBankrupt()) {
+            currentIndex_ = nextAliveIndex(currentIndex_);
             continue;
         }
 
         int roll = (std::rand() % 6) + 1;
+
+        emit message(QString::fromStdString(b.getName()) +
+                     " rolled " + QString::number(roll));
+
         movePlayer(b, roll);
         emit boardChanged();
 
-        if (checkGameOver())
-            return;
+        checkGameOver();
+        if (gameOver_) return;
 
-        do {
-            currentIndex_ = (currentIndex_ + 1) % players_.size();
-        } while (!players_[currentIndex_].isAlive());
+        currentIndex_ = nextAliveIndex(currentIndex_);
     }
+}
+
+void Game::endGameNow()
+{
+    if (gameOver_) return;
+
+    int richest = -1;
+    int maxMoney = -999999;
+
+    for (size_t i = 0; i < players_.size(); ++i) {
+        if (!players_[i].isBankrupt() && players_[i].getMoney() > maxMoney) {
+            maxMoney = players_[i].getMoney();
+            richest = static_cast<int>(i);
+        }
+    }
+
+    if (richest >= 0) {
+        emit message(QString::fromStdString(players_[richest].getName()) + " WON!");
+    }
+
+    gameOver_ = true;
 }
 
 } // namespace pxl

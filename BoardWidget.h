@@ -16,15 +16,19 @@ public:
 
 private slots:
     void onRollClicked();
+    void onBotTimerTimeout();
     void updateUI();
+    void onEndGameClicked();
 
 private:
     Game *m_game;
+    QTimer *m_botTimer;
+
     int rows_;
     int cols_;
 
     QLabel *msgBox_;
-    QLabel *balancesBox_;
+    QLabel *balancesBox_;   // NEW: shows balances
 
     std::vector<QLabel*> tileLabels_;
     std::vector<QLabel*> emptyLabels_;
